@@ -1,0 +1,6 @@
+{
+    "configuration": "CPUFreq=240,FlashMode=qio,FlashFreq=80",
+    "board": "esp32:esp32:esp32cam",
+    "sketch": "ArduimoEsp32Camera\\ESP32CAM_USPSerial.ino",
+    "port": "COM3"
+}
