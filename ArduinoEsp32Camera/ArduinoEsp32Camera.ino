@@ -12,7 +12,7 @@ const char *mqtt_broker = "broker.emqx.io";
 const char *topic = "esp32/test";
 const char *mqtt_username = "phuongbgbg";
 const char *mqtt_password = "1234567";
-const int mqtt_port = 1883;
+const int mqtt_port = 8883;
 #define PWDN_GPIO_NUM 32
 #define RESET_GPIO_NUM -1
 #define XCLK_GPIO_NUM 0
