@@ -1,7 +1,9 @@
 #include "esp_camera.h"
 #include <base64.hpp>
+#include <base64.h>
 //#include "camera_pins.h"
 #include <WiFi.h>
+//#include <String.h>
 #include <PubSubClient.h>
 
 #define CAMERA_MODEL_AI_THINKER
@@ -9,10 +11,11 @@
 const char *ssid = "Trầm cảm lên";
 const char *password = "Matkhaulatenwifichumviethoa";
 const char *mqtt_broker = "broker.emqx.io";
-const char *topic = "esp32/test";
+const char *topic = "esp32/test/phuong/dep/trai";
 const char *mqtt_username = "phuongbgbg";
 const char *mqtt_password = "1234567";
-const int mqtt_port = 8883;
+const int mqtt_port = 1883;
+unsigned char *base64_text;
 #define PWDN_GPIO_NUM 32
 #define RESET_GPIO_NUM -1
 #define XCLK_GPIO_NUM 0
@@ -58,7 +61,7 @@ void cameraInit()
     config.xclk_freq_hz = 20000000;
     config.pixel_format = PIXFORMAT_JPEG;
     config.frame_size = FRAMESIZE_VGA; // 640x480
-    config.jpeg_quality = 10;
+    config.jpeg_quality = 30;
     config.fb_count = 2;
 
     // camera init
@@ -71,23 +74,45 @@ void cameraInit()
     }
 }
 
+void grabImage()
+{
+  camera_fb_t *fb = esp_camera_fb_get();
 
-//void grabImage(){
-//  camera_fb_t * fb = esp_camera_fb_get();
-//  if(fb != NULL && fb->format == PIXFORMAT_JPEG && fb->len < bufferSize){
-//    Serial.print("Image Length: ");
-//    Serial.print(fb->len);
-//    Serial.print("\t Publish Image: ");
-////    bool result = client.publish(ESP32CAM_PUBLISH_TOPIC, (const char*)fb->buf, fb->len);
-//    Serial.println(result);
-//
-//    if(!result){
-//      ESP.restart();
-//    }
-//  }
-//  esp_camera_fb_return(fb);
-//  delay(1);
-//}
+  if (fb != NULL && fb->format == PIXFORMAT_JPEG && fb->len < bufferSize)
+  {
+    Serial.print("Image Length: ");
+    Serial.print(fb->len);
+    Serial.print("\t Publish Image: ");
+    //    String encoded = base64::encode(fb->buf, fb->len);
+    //    int base64_length = encode_base64(fb->buf,fb->len,base64_text);
+    //    const char *encoded_Image = encoded.c_str();
+    //    client.subscribe(topic);
+    String encoded = base64::encode(fb->buf, fb->len);
+    //  Serial.write(encoded.c_str(), encoded.length());
+    //  Serial.println(encoded);
+    Serial.println(encoded.length());
+    //  Serial.println();
+    const char *encoded_Image = encoded.c_str();
+    //  Serial.println(encoded_Image);
+    Serial.println(topic);
+    if (!client.connected())
+    {
+    }
+    else
+    {
+      bool result = client.publish(topic, encoded_Image);
+      //    client.subscribe(topic);
+      Serial.println(result);
+
+      if (!result)
+      {
+        ESP.restart();
+      }
+    }
+  }
+  esp_camera_fb_return(fb);
+  delay(1);
+}
 
 void setup()
 {
@@ -119,26 +144,27 @@ void setup()
         }
     }
     // publish and subscribe
+    client.setBufferSize(65535);
     client.publish(topic, "Hi EMQ X I'm ESP32 ^^");
     client.subscribe(topic);
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
-    Serial.print("Message arrived in topic: ");
-    Serial.println(topic);
-    Serial.print("Message:");
-    for (int i = 0; i < length; i++)
-    {
-        Serial.print((char)payload[i]);
-    }
-    Serial.println();
-    Serial.println("-----------------------");
+  //    Serial.print("Message arrived in topic: ");
+  //    Serial.println(topic);
+  //    Serial.print("Message:");
+  //    for (int i = 0; i < length; i++)
+  //    {
+  //        Serial.print((char)payload[i]);
+  //    }
+  //    Serial.println();
+  //    Serial.println("-----------------------");
 }
 
 void loop()
 {
     client.loop();
-//    if (client.connected())
-//        grabImage();
+    if (client.connected())
+      grabImage();
 }
