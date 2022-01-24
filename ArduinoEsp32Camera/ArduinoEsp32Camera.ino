@@ -154,6 +154,21 @@ void callback(char *topic, byte *payload, unsigned int length)
   //    }
   //    Serial.println();
   //    Serial.println("-----------------------");
+  if((char)payload == 1){
+    //code di len
+    }
+    else if((char)payload == 2){
+    //code di xuong
+    }else if((char)payload == 3){
+    //code di sang trai
+    }else if((char)payload == 4){
+    //code di sang phai
+    }else if((char)payload == 0){
+    //code dung lai
+    }else if((char)payload == 5){
+    //code phun khu khuan
+    }
+    
 }
 
 void loop()
