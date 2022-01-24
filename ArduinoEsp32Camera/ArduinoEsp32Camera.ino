@@ -11,7 +11,7 @@
 const char *ssid = "Trầm cảm lên";
 const char *password = "Matkhaulatenwifichumviethoa";
 const char *mqtt_broker = "broker.emqx.io";
-const char *topic = "esp32/test/phuong/dep/trai";
+const char *topic = "esp32/test/disinfection/vehicle/esp32/camera/app";
 const char *mqtt_username = "phuongbgbg";
 const char *mqtt_password = "1234567";
 const int mqtt_port = 1883;
@@ -61,7 +61,7 @@ void cameraInit()
     config.xclk_freq_hz = 20000000;
     config.pixel_format = PIXFORMAT_JPEG;
     config.frame_size = FRAMESIZE_VGA; // 640x480
-    config.jpeg_quality = 30;
+    config.jpeg_quality = 30;//đặt lại chất luọng camera
     config.fb_count = 2;
 
     // camera init
@@ -83,13 +83,7 @@ void grabImage()
     Serial.print("Image Length: ");
     Serial.print(fb->len);
     Serial.print("\t Publish Image: ");
-    //    String encoded = base64::encode(fb->buf, fb->len);
-    //    int base64_length = encode_base64(fb->buf,fb->len,base64_text);
-    //    const char *encoded_Image = encoded.c_str();
-    //    client.subscribe(topic);
-    String encoded = base64::encode(fb->buf, fb->len);
-    //  Serial.write(encoded.c_str(), encoded.length());
-    //  Serial.println(encoded);
+    String encoded = base64::encode(fb->buf, fb->len);//endoce hình ảnh thành code base64
     Serial.println(encoded.length());
     //  Serial.println();
     const char *encoded_Image = encoded.c_str();
@@ -100,7 +94,7 @@ void grabImage()
     }
     else
     {
-      bool result = client.publish(topic, encoded_Image);
+      bool result = client.publish(topic, encoded_Image);//gửi code base64 lên broker mqtt
       //    client.subscribe(topic);
       Serial.println(result);
 

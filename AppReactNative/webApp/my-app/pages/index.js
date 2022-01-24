@@ -20,12 +20,16 @@ export default function Home() {
 		<ChakraProvider>
 			<Box>
 				<Text>{message}</Text>
-				<Image
-					src={`data:image/png;base64,${message}`}
-					alt='video stream'
-					width='600px'
-					height='480px'
-				/>
+				{useEffect(() => {
+					return (
+						<Image
+							src={`data:image/png;base64,${message}`}
+							alt='video stream'
+							width='600px'
+							height='480px'
+						/>
+					);
+				}, [message])}
 			</Box>
 		</ChakraProvider>
 	);

@@ -12,7 +12,7 @@ const client = mqtt.connect("mqtt://broker.emqx.io:1883", {
 	clean: true,
 });
 
-const topic = "esp32/test/phuong/dep/trai";
+const topic = "esp32/test/disinfection/vehicle/esp32/camera/app";
 client.on("connect", () => {
 	console.log("Connected");
 	client.subscribe([topic], () => {
@@ -33,7 +33,7 @@ client.on("connect", () => {
 let mesg = "";
 client.on("message", (topic, payload) => {
 	// console.log("Received Message:", topic, payload.toString());
-	mesg = payload.toString();
+	mesg = `data:image/jpeg;base64,${payload.toString()}`;
 });
 
 app.get("/mqtt", (req, res) => {
@@ -41,5 +41,5 @@ app.get("/mqtt", (req, res) => {
 });
 
 app.listen(port, () => {
-	console.log(`Example app listening at http://localhost:${port}`);
+	console.log(`Example app listening at http://localhost:${port}/mqtt`);
 });
