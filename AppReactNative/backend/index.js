@@ -30,14 +30,15 @@ client.on("connect", () => {
 	);
 });
 
-let mesg = "";
+let mesg = null;
 client.on("message", (topic, payload) => {
 	// console.log("Received Message:", topic, payload.toString());
-	mesg = `data:image/jpeg;base64,${payload.toString()}`;
+	// mesg = `data:image/jpeg;base64,${payload.toString()}`;
+    mesg = Buffer.from(payload).toString('base64')
 });
 
 app.get("/mqtt", (req, res) => {
-	res.send(mesg);
+    res.send(`data:image/png;base64,${mesg}`);
 });
 
 app.listen(port, () => {
