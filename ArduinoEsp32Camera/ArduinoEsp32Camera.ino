@@ -88,7 +88,7 @@ void grabImage()
     //  Serial.println();
     const char *encoded_Image = encoded.c_str();
     //  Serial.println(encoded_Image);
-    Serial.println(topic);
+//    Serial.println(topic);
     if (!client.connected())
     {
     }
@@ -154,18 +154,18 @@ void callback(char *topic, byte *payload, unsigned int length)
   //    }
   //    Serial.println();
   //    Serial.println("-----------------------");
-  if((char)payload == 1){
+  if((int)payload == 1){
     //code di len
     }
-    else if((char)payload == 2){
+    else if((int)payload == 2){
     //code di xuong
-    }else if((char)payload == 3){
+    }else if((int)payload == 3){
     //code di sang trai
-    }else if((char)payload == 4){
+    }else if((int)payload == 4){
     //code di sang phai
-    }else if((char)payload == 0){
+    }else if((int)payload == 0){
     //code dung lai
-    }else if((char)payload == 5){
+    }else if((int)payload == 5){
     //code phun khu khuan
     }
     
