@@ -87,8 +87,8 @@ void grabImage()
 //    Serial.println(encoded.length());
     //  Serial.println();
 //    const char *encoded_Image = encoded.c_str();
-//      Serial.println((const char*)fb->buf);
-    Serial.println(topic);
+    Serial.println((const char*)fb->buf);
+    // Serial.println(topic);
     if (!client.connected())
     {
     }
