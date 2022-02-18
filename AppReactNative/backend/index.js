@@ -5,10 +5,10 @@ const mqtt = require("mqtt");
 const app = express();
 const port = 3001;
 
-const client = mqtt.connect("mqtt://broker.emqx.io:1883", {
+const client = mqtt.connect("mqtt://192.168.1.4:1883", {
 	clientId: "mqtt_jsksy554",
-	username: "phuongbgbg",
-	password: "1234567",
+	// username: "phuongbgbg",
+	// password: "1234567",
 	clean: true,
 });
 
