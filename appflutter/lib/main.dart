@@ -1,12 +1,3 @@
-/////////////////////////////////////////////////////////////////
-// ignore_for_file: unnecessary_string_escapes
-
-/*
-  AWS IoT | Flutter MQTT Client App [Full Version]
-  Video Tutorial: https://youtu.be/aY7i0xnQW54
-  Created by Eric N. (ThatProject)
-*/
-/////////////////////////////////////////////////////////////////
 import 'dart:io';
 import 'dart:typed_data';
 
