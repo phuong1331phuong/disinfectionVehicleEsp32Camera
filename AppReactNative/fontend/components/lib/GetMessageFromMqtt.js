@@ -31,7 +31,7 @@ export default function Message() {
 		// 	src: [message],
 		// });
 		// console.log(stream.current.setNativeProps);
-		setInterval(streamVideo, 10);
+		setInterval(streamVideo, 50);
 	}, []);
 	return (
 		<Center>
