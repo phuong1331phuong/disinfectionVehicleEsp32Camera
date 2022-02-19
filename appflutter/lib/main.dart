@@ -1,167 +1,302 @@
-import 'package:flutter/material.dart';
-import 'dart:async';
+/////////////////////////////////////////////////////////////////
+// ignore_for_file: unnecessary_string_escapes
+
+/*
+  AWS IoT | Flutter MQTT Client App [Full Version]
+  Video Tutorial: https://youtu.be/aY7i0xnQW54
+  Created by Eric N. (ThatProject)
+*/
+/////////////////////////////////////////////////////////////////
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+import 'package:ndialog/ndialog.dart';
 
-final client = MqttServerClient('localhost', '');
+void main() {
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-      ),
-      home: const MyHomePage(title: 'Home'),
+      title: 'MQTT ESP32CAM VIEWER',
+      themeMode: ThemeMode.dark,
+      darkTheme: ThemeData.dark(),
+      home: MQTTClient(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-  final String title;
+class MQTTClient extends StatefulWidget {
+  const MQTTClient({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MQTTClientState createState() => _MQTTClientState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MQTTClientState extends State<MQTTClient> {
+  String statusText = "Status Text";
+  bool isConnected = false;
+  TextEditingController idTextController = TextEditingController();
+
+  final client = MqttServerClient.withPort(
+      "a3ylcu9d7zkfu-ats.iot.ap-southeast-1.amazonaws.com", "flutter", 8883);
+  @override
+  void dispose() {
+    idTextController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    var width = MediaQuery.of(context).size.width;
+    final bool hasShortWidth = width < 600;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
+      body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[const Text("Hello World!")],
+          children: [header(), body(hasShortWidth), footer()],
         ),
       ),
     );
   }
-}
 
-var pongCount = 0; // Pong counter
+  Widget header() {
+    return Expanded(
+      child: Container(
+        child: Center(
+          child: Text(
+            'ESP32CAM Viewer\n- AWS IoT -',
+            style: TextStyle(
+                fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+      flex: 3,
+    );
+  }
 
-Future<int> main() async {
-  runApp(const MyApp());
+  Widget body(bool hasShortWidth) {
+    return Expanded(
+      child: Container(
+        child: hasShortWidth
+            ? Column(
+                children: [bodyMenu(), Expanded(child: bodySteam())],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: bodyMenu(),
+                    flex: 2,
+                  ),
+                  Expanded(
+                    child: bodySteam(),
+                    flex: 8,
+                  )
+                ],
+              ),
+      ),
+      flex: 20,
+    );
+  }
 
-  client.logging(on: false);
+  Widget bodyMenu() {
+    return Container(
+      color: Colors.black26,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: TextFormField(
+                enabled: !isConnected,
+                controller: idTextController,
+                decoration: InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'MQTT Client Id',
+                    labelStyle: TextStyle(fontSize: 10),
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.subdirectory_arrow_left),
+                      onPressed: _connect,
+                    ))),
+          ),
+          isConnected
+              ? TextButton(onPressed: _disconnect, child: Text('Disconnect'))
+              : Container()
+        ],
+      ),
+    );
+  }
 
-  client.setProtocolV311();
+  Widget bodySteam() {
+    return Container(
+      color: Colors.black,
+      child: StreamBuilder(
+        stream: client.updates,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData)
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            );
+          else {
+            final mqttReceivedMessages =
+                snapshot.data as List<MqttReceivedMessage<MqttMessage?>>?;
 
-  client.keepAlivePeriod = 20;
+            final recMess =
+                mqttReceivedMessages![0].payload as MqttPublishMessage;
 
-  client.onDisconnected = onDisconnected;
+            // print("\n\n\n\n\n\n\n\n\n\nhahaha\n\n\n\n\n\n\n\n\n");
+            final jpegImage = img.decodeJpg(recMess.payload.message);
 
-  client.onConnected = onConnected;
+            // print(
+            //     'img width = ${jpegImage.width}, height = ${jpegImage.height}');
+            return Container(
+                child: Image.memory(
+              img.encodeJpg(jpegImage!) as Uint8List,
+              gaplessPlayback: true,
+            ));
+          }
+        },
+      ),
+    );
+  }
 
-  client.onSubscribed = onSubscribed;
+  Widget footer() {
+    return Expanded(
+      child: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 16),
+        child: Text(
+          statusText,
+          style: TextStyle(
+              fontWeight: FontWeight.normal, color: Colors.amberAccent),
+        ),
+      ),
+      flex: 1,
+    );
+  }
 
-  client.pongCallback = pong;
+  _connect() async {
+    if (idTextController.text.trim().isNotEmpty) {
+      ProgressDialog progressDialog = ProgressDialog(context,
+          blur: 0,
+          dialogTransitionType: DialogTransitionType.Shrink,
+          dismissable: false);
+      progressDialog.setLoadingWidget(CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation(Colors.red),
+      ));
+      progressDialog
+          .setMessage(Text("Please Wait, Connecting to AWS IoT MQTT Broker"));
+      progressDialog.setTitle(Text("Connecting"));
+      progressDialog.show();
 
-  final connMess = MqttConnectMessage()
-      .withClientIdentifier('Mqtt_MyClientUniqueId')
-      .withWillTopic(
-          'esp32/test/disinfection/vehicle/esp32/camera/app') // If you set this you must set a will message
-      .withWillMessage('Hello, I\'m App Flutter')
-      .startClean() // Non persistent session for testing
-      .withWillQos(MqttQos.atLeastOnce);
-  print('EXAMPLE::Mosquitto client connecting....');
-  client.connectionMessage = connMess;
+      isConnected = await mqttConnect(idTextController.text.trim());
+      progressDialog.dismiss();
+    }
+  }
 
-  try {
-    await client.connect();
-  } on NoConnectionException catch (e) {
-    print('EXAMPLE::client exception - $e');
+  _disconnect() {
     client.disconnect();
-  } on SocketException catch (e) {
-    print('EXAMPLE::socket exception - $e');
-    client.disconnect();
   }
 
-  if (client.connectionStatus!.state == MqttConnectionState.connected) {
-    print('EXAMPLE::Mosquitto client connected');
-  } else {
-    print(
-        'EXAMPLE::ERROR Mosquitto client connection failed - disconnecting, status is ${client.connectionStatus}');
-    client.disconnect();
-    exit(-1);
+  Future<bool> mqttConnect(String uniqueId) async {
+    setStatus("Connecting MQTT Broker");
+
+    // After adding your certificates to the pubspec.yaml, you can use Security Context.
+
+    ByteData rootCA = await rootBundle.load('assets/certs/RootCA.pem');
+    ByteData deviceCert =
+        await rootBundle.load('assets/certs/DeviceCertificate.pem.crt');
+    ByteData privateKey = await rootBundle.load('assets/certs/Private.pem.key');
+
+    final context = SecurityContext.defaultContext;
+    context.setClientAuthoritiesBytes(rootCA.buffer.asUint8List());
+    context.useCertificateChainBytes(deviceCert.buffer.asUint8List());
+    context.usePrivateKeyBytes(privateKey.buffer.asUint8List());
+
+    // context.setClientAuthorities('assets/certs/RootCA.pem');
+    // context.usePrivateKey('assets/certs/Private.pem.key');
+    // context.useCertificateChain('assets/certs/DeviceCertificate.pem.crt');
+    //
+    client.securityContext = context;
+
+    client.logging(on: false);
+    client.keepAlivePeriod = 20;
+    client.port = 8883;
+    client.secure = true;
+    client.onConnected = onConnected;
+    client.onDisconnected = onDisconnected;
+    client.pongCallback = pong;
+
+    final MqttConnectMessage connMess =
+        MqttConnectMessage().withClientIdentifier('flutter').startClean();
+    client.connectionMessage = connMess;
+
+    try {
+      print('MQTT client connecting to AWS IoT....');
+      await client.connect();
+    } on Exception catch (e) {
+      print('MQTT client exception - $e');
+      client.disconnect();
+      exit(-1);
+    }
+    if (client.connectionStatus!.state == MqttConnectionState.connected) {
+      print("Connected to AWS Successfully!");
+    } else {
+      return false;
+    }
+
+    const topic2 = 'esp32/control';
+    final builder = MqttClientPayloadBuilder();
+    builder.addString('Hello World');
+    // Important: AWS IoT Core can only handle QOS of 0 or 1. QOS 2 (exactlyOnce) will fail!
+    client.publishMessage(topic2, MqttQos.atLeastOnce, builder.payload()!);
+    const topic = 'esp32/stream';
+    client.subscribe(topic, MqttQos.atMostOnce);
+    // client.updates!.listen((List<MqttReceivedMessage<MqttMessage>> c) {
+    //   final recMess = c[0].payload as MqttPublishMessage;
+    //   print("\n\n\n\n\n\nmessage\n\n\n\n\n\n");
+    //   final pt =
+    //       MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+    //   print(
+    //       'EXAMPLE::Change notification:: topic is <${c[0].topic}>, payload is <-- $pt -->');
+    //   print('');
+    // });
+    return true;
   }
 
-  print('EXAMPLE::Subscribing to the test/lol topic');
-  const topic =
-      'esp32/test/disinfection/vehicle/esp32/camera/app'; // Not a wildcard topic
-  client.subscribe(topic, MqttQos.atMostOnce);
-
-  client.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? c) {
-    final recMess = c![0].payload as MqttPublishMessage;
-    final pt =
-        MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-    print(
-        'EXAMPLE::Change notification:: topic is <${c[0].topic}>, payload is <-- $pt -->');
-    print('');
-  });
-
-  // client.published!.listen((MqttPublishMessage message) {
-  //   print(
-  //       'EXAMPLE::Published notification:: topic is ${message.variableHeader!.topicName}, with Qos ${message.header!.qos}');
-  // });
-  const pubTopic = 'esp32/test/disinfection/vehicle/esp32/camera/app/pub';
-  final builder = MqttClientPayloadBuilder();
-  builder.addString('Hello from mqtt_client');
-
-  client.subscribe(pubTopic, MqttQos.exactlyOnce);
-
-  print('EXAMPLE::Publishing our topic');
-  client.publishMessage(pubTopic, MqttQos.exactlyOnce, builder.payload()!);
-
-  // print('EXAMPLE::Sleeping....');
-  // await MqttUtilities.asyncSleep(60);
-
-  // print('EXAMPLE::Unsubscribing');
-  // client.unsubscribe(topic);
-
-  // await MqttUtilities.asyncSleep(2);
-  // print('EXAMPLE::Disconnecting');
-  // client.disconnect();
-  // print('EXAMPLE::Exiting normally');
-  return 0;
-}
-
-void onSubscribed(String topic) {
-  print('EXAMPLE::Subscription confirmed for topic $topic');
-}
-
-void onDisconnected() {
-  print('EXAMPLE::OnDisconnected client callback - Client disconnection');
-  if (client.connectionStatus!.disconnectionOrigin ==
-      MqttDisconnectionOrigin.solicited) {
-    print('EXAMPLE::OnDisconnected callback is solicited, this is correct');
-  } else {
-    print(
-        'EXAMPLE::OnDisconnected callback is unsolicited or none, this is incorrect - exiting');
-    exit(-1);
+  void setStatus(String content) {
+    setState(() {
+      statusText = content;
+    });
   }
-  if (pongCount == 3) {
-    print('EXAMPLE:: Pong count is correct');
-  } else {
-    print('EXAMPLE:: Pong count is incorrect, expected 3. actual $pongCount');
+
+  Uint8List convertStringToUint8List(String str) {
+    final List<int> codeUnits = str.codeUnits;
+    final Uint8List unit8List = Uint8List.fromList(codeUnits);
+
+    return unit8List;
   }
-}
 
-void onConnected() {
-  print(
-      'EXAMPLE::OnConnected client callback - Client connection was successful');
-}
+  void onConnected() {
+    setStatus("Client connection was successful");
+  }
 
-void pong() {
-  print('EXAMPLE::Ping response client callback invoked');
-  pongCount++;
+  void onDisconnected() {
+    setStatus("Client Disconnected");
+    isConnected = false;
+  }
+
+  void pong() {
+    print('Ping response client callback invoked');
+  }
 }

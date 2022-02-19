@@ -3,7 +3,10 @@
 #define SECRET
 #define THINGNAME "myESP32"
 
+const char WIFI_SSID[] = "Trầm cảm lên";
+const char WIFI_PASSWORD[] = "Matkhaulatenwifichumviethoa";
 const char AWS_IOT_ENDPOINT[] = "a3ylcu9d7zkfu-ats.iot.ap-southeast-1.amazonaws.com";
+
 
 // Amazon Root CA 1
 static const char AWS_CERT_CA[] PROGMEM = R"EOF(

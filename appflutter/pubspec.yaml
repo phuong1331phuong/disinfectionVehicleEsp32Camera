@@ -1,4 +1,4 @@
-name: appflutter
+name: esp32_app
 description: A new Flutter project.
 
 # The following line prevents the package from being accidentally published to
@@ -35,6 +35,8 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   mqtt_client: ^9.6.5
+  image: ^3.1.1
+  ndialog: ^4.1.0
 
 dev_dependencies:
   flutter_test:
@@ -59,8 +61,10 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+    - assets/certs/RootCA.pem
+    - assets/certs/DeviceCertificate.pem.crt
+    - assets/certs/Private.pem.key
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
