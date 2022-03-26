@@ -212,7 +212,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   void onConnected() {
-    Navigator.of(context).push(_createRoute());
+    if (isConnected) {
+      Navigator.of(context).push(_createRoute());
+    }
   }
 
   Route _createRoute() {

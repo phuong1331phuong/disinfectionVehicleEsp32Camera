@@ -28,15 +28,15 @@ class _ControlForMobileState extends State<ControlForMobile> {
               size: 150,
               callBack: (double value) {
                 if (value == 1) {
-                  publishMessageContol("up");
+                  publishMessageContol("1");
                 } else if (value == 2) {
-                  publishMessageContol("right");
+                  publishMessageContol("2");
                 } else if (value == 3) {
-                  publishMessageContol("down");
+                  publishMessageContol("3");
                 } else if (value == 4) {
-                  publishMessageContol("left");
+                  publishMessageContol("4");
                 } else if (value == 0) {
-                  publishMessageContol("stop");
+                  publishMessageContol("0");
                 }
               },
             ),
@@ -55,9 +55,9 @@ class _ControlForMobileState extends State<ControlForMobile> {
                     activeColor: Colors.green,
                     onChanged: (bool value) {
                       if (value == true) {
-                        publishMessageContol("active-sterilize");
+                        publishMessageContol("A");
                       } else {
-                        publishMessageContol("inactive-sterilize");
+                        publishMessageContol("a");
                       }
                       print(value);
                       setState(() {
@@ -79,7 +79,7 @@ class _ControlForMobileState extends State<ControlForMobile> {
                   color: Color.fromARGB(255, 255, 208, 0),
                 ),
                 onPressed: () {
-                  publishMessageContol("alert");
+                  publishMessageContol("O");
                 },
               )),
           Positioned(
@@ -96,9 +96,9 @@ class _ControlForMobileState extends State<ControlForMobile> {
                     activeColor: Colors.green,
                     onChanged: (bool value) {
                       if (value == true) {
-                        publishMessageContol("active-flashlight");
+                        publishMessageContol("X");
                       } else {
-                        publishMessageContol("inactive-flashlight");
+                        publishMessageContol("x");
                       }
                       print(value);
                       setState(() {
