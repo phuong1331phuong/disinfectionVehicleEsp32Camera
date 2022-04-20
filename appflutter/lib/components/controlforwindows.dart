@@ -26,15 +26,15 @@ class _ControlForWindowsState extends State<ControlForWindows> {
             size: 150,
             callBack: (double value) {
               if (value == 1) {
-                publishMessageContol("up");
+                publishMessageContol("1");
               } else if (value == 2) {
-                publishMessageContol("right");
+                publishMessageContol("2");
               } else if (value == 3) {
-                publishMessageContol("down");
+                publishMessageContol("3");
               } else if (value == 4) {
-                publishMessageContol("left");
+                publishMessageContol("4");
               } else if (value == 0) {
-                publishMessageContol("stop");
+                publishMessageContol("0");
               }
             },
           ),
@@ -53,9 +53,9 @@ class _ControlForWindowsState extends State<ControlForWindows> {
                   activeColor: Colors.green,
                   onChanged: (bool value) {
                     if (value == true) {
-                      publishMessageContol("active-sterilize");
+                      publishMessageContol("A");
                     } else {
-                      publishMessageContol("inactive-sterilize");
+                      publishMessageContol("a");
                     }
                     print(value);
                     setState(() {
@@ -76,7 +76,7 @@ class _ControlForWindowsState extends State<ControlForWindows> {
                 color: Colors.white,
               ),
               onPressed: () {
-                publishMessageContol("alert");
+                publishMessageContol("O");
               },
             )),
         Positioned(
@@ -93,9 +93,9 @@ class _ControlForWindowsState extends State<ControlForWindows> {
                   activeColor: Colors.green,
                   onChanged: (bool value) {
                     if (value == true) {
-                      publishMessageContol("active-flashlight");
+                      publishMessageContol("X");
                     } else {
-                      publishMessageContol("inactive-flashlight");
+                      publishMessageContol("x");
                     }
                     print(value);
                     setState(() {
