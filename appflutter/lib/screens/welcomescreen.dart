@@ -42,6 +42,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     _controller.dispose();
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,11 +113,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     fontSize: 30,
                   ),
                 ),
-                // IconButton(
-                //     onPressed: () {
-                //       print(MediaQuery.of(context).size.height);
-                //     },
-                //     icon: const Icon(Icons.send))
               ]),
             ),
           ),
@@ -128,13 +124,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         blur: 0,
         dialogTransitionType: DialogTransitionType.Shrink,
         dismissable: false);
-    // progressDialog.setLoadingWidget(const CircularProgressIndicator(
-    //   valueColor: AlwaysStoppedAnimation(Colors.red),
-    // ));
-    // progressDialog.setMessage(
-    //     const Text("Please Wait, Connecting to AWS IoT MQTT Broker"));
-    // progressDialog.setTitle(const Text("Connecting"));
-    // progressDialog.show();
 
     isConnected = await mqttConnect("flutter");
     // progressDialog.dismiss();

@@ -3,8 +3,8 @@
 #define SECRET
 #define THINGNAME "myESP32"
 
-const char WIFI_SSID[] = "Ngan Cua";
-const char WIFI_PASSWORD[] = "31082010";
+const char WIFI_SSID[] = "Trầm cảm lên";
+const char WIFI_PASSWORD[] = "Matkhaulatenwifichumviethoa";
 const char AWS_IOT_ENDPOINT[] = "a3ylcu9d7zkfu-ats.iot.ap-southeast-1.amazonaws.com";
 
 
@@ -86,3 +86,4 @@ NNEBb6+CmDtJmAFbVHgs5TERl4huDS32qX/i9GRlsLIa7+ESABwVDRUYSI/4x/ZD
 5BeA2mSLRHACpX/sYQZ5Weiq9gr3CGICknwQqBc+vw6h7eU2dhgW
 -----END RSA PRIVATE KEY-----
 )KEY";
+
