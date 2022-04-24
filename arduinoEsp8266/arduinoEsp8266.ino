@@ -1,15 +1,5 @@
-#include <ESP8266WiFi.h>   
-#include <MQTTClient.h>
-#include <ESP8266WebServer.h>
-#include <WiFiClientSecure.h>
-#include <DNSServer.h>
-#include "secrets.h"
-
-const int bufferSize = 1024 * 23; // 23552 bytes
-
-WiFiClientSecure net = WiFiClientSecure();
-MQTTClient client = MQTTClient(bufferSize);
-
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
 #define ENA   5          // Điều khiển tốc độ động cơ bên trái     GPIO5(D1)
 #define ENB   12          // Điều khiển tốc độ động cơ bên phải    GPIO12(D6)
 #define IN1  4          // L298N in1 Động cơ trái quay             GPIO4(D2)
@@ -26,6 +16,8 @@ int tocdoxe = 800;         // 400 - 1023.
 /********************************************* Tiến tới *****************************************************/
 void tien()
 {
+      Serial.println("tien");
+
       digitalWrite(IN1, LOW);
       digitalWrite(IN2, HIGH);
       analogWrite(ENA, tocdoxe);
@@ -36,6 +28,8 @@ void tien()
 /********************************** Lùi lại ******************************************/
 void lui()
 {
+      Serial.println("lui");
+
       digitalWrite(IN1, HIGH);
       digitalWrite(IN2, LOW);
       analogWrite(ENA, tocdoxe);
@@ -46,6 +40,8 @@ void lui()
 /********************************** Dừng lại ******************************************/
 void dung()
 {
+      Serial.println("dung");
+
       digitalWrite(IN1, LOW);
       digitalWrite(IN2, LOW);
       analogWrite(ENA, 0);
@@ -56,6 +52,7 @@ void dung()
 /********************************** Rẽ trái ******************************************/
 void re_trai()
 {
+      Serial.println("re trai");
   digitalWrite(IN1, LOW);
       digitalWrite(IN2, HIGH);
       analogWrite(ENA, tocdoxe);
@@ -66,6 +63,8 @@ void re_trai()
 /********************************** Rẽ phải ******************************************/
 void re_phai()
 {
+      Serial.println("re phai");
+
       digitalWrite(IN1, LOW);
       digitalWrite(IN2, LOW);
       analogWrite(ENA, tocdoxe);
@@ -95,6 +94,67 @@ void coi_bao(){
       delay(1000);
       digitalWrite(D8,LOW);
 }
+// WiFi
+const char *ssid = "phuong nguyen"; // Enter your WiFi name
+const char *password = "123456789";  // Enter WiFi password
+
+// MQTT Broker
+const char *mqtt_broker = "broker.emqx.io";
+const char *topic = "esp8266/control";
+const char *mqtt_username = "phuongbgbg";
+const char *mqtt_password = "777777";
+const int mqtt_port = 1883;
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setup() {
+  // Set software serial baud to 115200;
+  Serial.begin(115200);
+  pinMode(ENA, OUTPUT);
+  pinMode(ENB, OUTPUT); 
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  pinMode(D0,OUTPUT);
+  pinMode(D7,OUTPUT);
+  pinMode(D8,OUTPUT);
+  digitalWrite(ENA, LOW);
+  digitalWrite(ENB, LOW);
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+  digitalWrite(D0,HIGH);
+  digitalWrite(D7,HIGH);
+  digitalWrite(D8,HIGH);
+  // connecting to a WiFi network
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.println("Connecting to WiFi..");
+  }
+  Serial.println("Connected to the WiFi network");
+  //connecting to a mqtt broker
+  client.setServer(mqtt_broker, mqtt_port);
+  client.setCallback(callback);
+  while (!client.connected()) {
+      String client_id = "esp8266-client-";
+      client_id += String(WiFi.macAddress());
+      Serial.printf("The client %s connects to the public mqtt broker\n", client_id.c_str());
+      if (client.connect(client_id.c_str(), mqtt_username, mqtt_password)) {
+          Serial.println("Public emqx mqtt broker connected");
+      } else {
+          Serial.print("failed with state ");
+          Serial.print(client.state());
+          delay(2000);
+      }
+  }
+  // publish and subscribe
+  client.subscribe(topic);
+}
+
 
 void callback(char *topic, byte *payload, unsigned int length) {
     if((char)payload[0] == 48){
@@ -120,83 +180,23 @@ void callback(char *topic, byte *payload, unsigned int length) {
     }
 }
 
-void connectAWS()
-{
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  Serial.println("\n\n=====================");
-  Serial.println("Connecting to Wi-Fi");
-  Serial.println("=====================\n\n");
-
-  while (WiFi.status() != WL_CONNECTED){
-    delay(500);
-    Serial.print(".");
-  }
-
-  // Configure WiFiClientSecure to use the AWS IoT device credentials
-  net.setCACert((const uint8_t*)AWS_CERT_CA,1190);
-  net.setCertificate((const uint8_t*)AWS_CERT_CRT,1226);
-  net.setPrivateKey((const uint8_t*)AWS_CERT_PRIVATE,1677);
-
-  // Connect to the MQTT broker on the AWS endpoint we defined earlier
-  client.begin(AWS_IOT_ENDPOINT, 8883, net);
-  client.setCleanSession(true);
-
-  Serial.println("\n\n=====================");
-  Serial.println("Connecting to AWS IOT");
-  Serial.println("=====================\n\n");
-
-  while (!client.connect(THINGNAME)) {
-    Serial.print(".");
-    delay(100);
-  }
-
-  if(!client.connected()){
-    Serial.println("AWS IoT Timeout!");
-    ESP.restart();
-    return;
-  }
-  Serial.println("\n\n=====================");
-  Serial.println("AWS IoT Connected!");
-  Serial.println("=====================\n\n");
-}
-
-void setup()
-{
-  connectAWS();
-  pinMode(ENA, OUTPUT);
-  pinMode(ENB, OUTPUT); 
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
-  pinMode(IN3, OUTPUT);
-  pinMode(IN4, OUTPUT);
-  pinMode(D0,OUTPUT);
-  pinMode(D7,OUTPUT);
-  pinMode(D8,OUTPUT);
-  digitalWrite(ENA, LOW);
-  digitalWrite(ENB, LOW);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, LOW);
-  digitalWrite(D0,HIGH);
-  digitalWrite(D7,HIGH);
-  digitalWrite(D8,HIGH);
-}
-
-
-void loop(){
-    client.loop();
-    if(di_chuyen == 0){
+void loop() {
+  client.loop();
+  if(di_chuyen == 0){
         dung();
+        delay(100);
     }else if(di_chuyen == 1){
         tien();
+        delay(100);
     }else if(di_chuyen == 2){
         re_phai();
+        delay(100);
     }else if (di_chuyen == 3) {
         lui();
+        delay(100);
     }else if (di_chuyen == 4) {
         re_trai();
+        delay(100);
     }
 }

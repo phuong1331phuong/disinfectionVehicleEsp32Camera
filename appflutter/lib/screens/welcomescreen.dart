@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:async';
 
 import 'package:app_flutter/screens/testscreen.dart';
 import 'package:flutter/material.dart';
@@ -10,13 +11,11 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:ndialog/ndialog.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({Key? key}) : super(key: key);
-
   @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
+  State<WelcomeScreen> createState() => _WecomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen>
+class _WecomeScreenState extends State<WelcomeScreen>
     with SingleTickerProviderStateMixin {
   String statusText = "Status Text";
   bool bookmarked = false;
@@ -27,6 +26,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
   final client = MqttServerClient.withPort(
       "a3ylcu9d7zkfu-ats.iot.ap-southeast-1.amazonaws.com", "flutter", 8883);
+
+  late MqttServerClient client1;
 
   @override
   void initState() {
@@ -41,7 +42,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     super.dispose();
     _controller.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +113,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     fontSize: 30,
                   ),
                 ),
+                // IconButton(
+                //     onPressed: () {
+                //       print(MediaQuery.of(context).size.height);
+                //     },
+                //     icon: const Icon(Icons.send))
               ]),
             ),
           ),
@@ -125,7 +130,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         dialogTransitionType: DialogTransitionType.Shrink,
         dismissable: false);
 
+    client1 = await connect();
     isConnected = await mqttConnect("flutter");
+    Timer(Duration(seconds: 3), () {});
     // progressDialog.dismiss();
   }
 
@@ -187,6 +194,64 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     return true;
   }
 
+  Future<MqttServerClient> connect() async {
+    MqttServerClient client2 =
+        MqttServerClient.withPort('broker.emqx.io', 'flutter_client', 1883);
+    client2.logging(on: true);
+    client2.onConnected = onConnected1;
+    client2.onDisconnected = onDisconnected1;
+    client2.onUnsubscribed = onUnsubscribed1 as UnsubscribeCallback?;
+    client2.onSubscribed = onSubscribed1;
+    client2.onSubscribeFail = onSubscribeFail1;
+    client2.pongCallback = pong;
+
+    final connMessage = MqttConnectMessage()
+        .authenticateAs('phuongbgbg', '777777')
+        .keepAliveFor(60)
+        .withWillTopic('esp8266/control')
+        .withWillMessage('Will message')
+        .startClean()
+        .withWillQos(MqttQos.atLeastOnce);
+    client2.connectionMessage = connMessage;
+    try {
+      await client2.connect();
+    } catch (e) {
+      print('Exception: $e');
+      client2.disconnect();
+    }
+
+    return client2;
+  }
+
+  void onConnected1() {
+    print('Connected');
+  }
+
+// unconnected
+  void onDisconnected1() {
+    print('Disconnected');
+  }
+
+// subscribe to topic succeeded
+  void onSubscribed1(String topic) {
+    print('Subscribed topic: $topic');
+  }
+
+// subscribe to topic failed
+  void onSubscribeFail1(String topic) {
+    print('Failed to subscribe $topic');
+  }
+
+// unsubscribe succeeded
+  void onUnsubscribed1(String topic) {
+    print('Unsubscribed topic: $topic');
+  }
+
+// PING response received
+  void pong1() {
+    print('Ping response client callback invoked');
+  }
+
   void setStatus(String content) {
     setState(() {
       statusText = content;
@@ -201,15 +266,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   void onConnected() {
-    if (isConnected) {
-      Navigator.of(context).push(_createRoute());
-    }
+    Navigator.of(context).push(_createRoute());
   }
 
   Route _createRoute() {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => TestScreen(
         client: client,
+        client2: client1,
       ),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(0.0, 1.0);

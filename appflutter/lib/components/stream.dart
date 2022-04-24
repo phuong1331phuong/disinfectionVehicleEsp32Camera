@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:mqtt_client/mqtt_client.dart';
 
-class BodyStream extends StatelessWidget {
+class BodyStream extends StatefulWidget {
   const BodyStream({
     Key? key,
     required this.widget,
@@ -14,17 +14,26 @@ class BodyStream extends StatelessWidget {
   final TestScreen widget;
 
   @override
+  State<BodyStream> createState() => _BodyStreamState();
+}
+
+class _BodyStreamState extends State<BodyStream> {
+
+  @override
   Widget build(BuildContext context) {
     return Container(
+      height: MediaQuery.of(context).size.width < 600
+          ? MediaQuery.of(context).size.height / 1.2
+          : MediaQuery.of(context).size.height,
       child: Center(
         child: Container(
           color: Colors.black,
           child: StreamBuilder(
-            stream: widget.client.updates,
+            stream: widget.widget.client.updates,
             builder: (context, snapshot) {
               if (!snapshot.hasData)
                 return Center(
-                  child: const CircularProgressIndicator(
+                  child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 );

@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
       title: 'MQTT ESP32CAM VIEWER',
       themeMode: ThemeMode.dark,
       darkTheme: ThemeData.dark(),
-      home: const WelcomeScreen(),
+      home: WelcomeScreen(),
     );
   }
 }
