@@ -14,10 +14,9 @@ int minRange = 312;
 int maxRange = 712;
 int tocdoxe = 800;         // 400 - 1023.
 /********************************************* Tiến tới *****************************************************/
-void tien()
+void lui()
 {
-      Serial.println("tien");
-
+      Serial.println("lui");
       digitalWrite(IN1, LOW);
       digitalWrite(IN2, HIGH);
       analogWrite(ENA, tocdoxe);
@@ -26,10 +25,9 @@ void tien()
       analogWrite(ENB, tocdoxe+300);
 }
 /********************************** Lùi lại ******************************************/
-void lui()
+void tien()
 {
-      Serial.println("lui");
-
+      Serial.println("tien");
       digitalWrite(IN1, HIGH);
       digitalWrite(IN2, LOW);
       analogWrite(ENA, tocdoxe);
@@ -41,7 +39,6 @@ void lui()
 void dung()
 {
       Serial.println("dung");
-
       digitalWrite(IN1, LOW);
       digitalWrite(IN2, LOW);
       analogWrite(ENA, 0);
@@ -50,26 +47,25 @@ void dung()
       analogWrite(ENB, 0);
 }
 /********************************** Rẽ trái ******************************************/
-void re_trai()
+void re_phai()
 {
       Serial.println("re trai");
-  digitalWrite(IN1, LOW);
-      digitalWrite(IN2, HIGH);
+  digitalWrite(IN1, HIGH);
+      digitalWrite(IN2, LOW);
       analogWrite(ENA, tocdoxe);
       digitalWrite(IN3, LOW);
       digitalWrite(IN4, LOW);
       analogWrite(ENB, tocdoxe+300);
 }
 /********************************** Rẽ phải ******************************************/
-void re_phai()
+void re_trai()
 {
       Serial.println("re phai");
-
       digitalWrite(IN1, LOW);
       digitalWrite(IN2, LOW);
       analogWrite(ENA, tocdoxe);
-      digitalWrite(IN3, LOW);
-      digitalWrite(IN4, HIGH);
+      digitalWrite(IN3, HIGH);
+      digitalWrite(IN4, LOW);
       analogWrite(ENB, tocdoxe);
 }
 
@@ -182,21 +178,18 @@ void callback(char *topic, byte *payload, unsigned int length) {
 
 
 void loop() {
+//  digitalWrite(D0,HIGH);
+  digitalWrite(D8,HIGH);
   client.loop();
   if(di_chuyen == 0){
         dung();
-        delay(100);
     }else if(di_chuyen == 1){
         tien();
-        delay(100);
     }else if(di_chuyen == 2){
         re_phai();
-        delay(100);
     }else if (di_chuyen == 3) {
         lui();
-        delay(100);
     }else if (di_chuyen == 4) {
         re_trai();
-        delay(100);
     }
 }

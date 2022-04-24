@@ -72,13 +72,13 @@ class _TestScreenState extends State<TestScreen> {
           Positioned(
               left: 0,
               right: 0,
-              bottom: 180,
+              bottom: 200,
               child: Column(
                 children: [
                   const Text(
-                    "Phun khử khuân",
+                    "Phun khử khuẩn",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.yellow),
+                    style: TextStyle(color: Colors.yellow, fontSize: 18),
                   ),
                   Switch.adaptive(
                     activeColor: Colors.green,
@@ -98,7 +98,7 @@ class _TestScreenState extends State<TestScreen> {
                 ],
               )),
           Positioned(
-              top: 40,
+              top: 50,
               left: 0,
               right: 0,
               child: Padding(
