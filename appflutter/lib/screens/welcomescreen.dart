@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:async';
 
-import 'package:app_flutter/screens/testscreen.dart';
+import 'package:app_flutter/screens/homescreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
@@ -32,6 +32,7 @@ class _WecomeScreenState extends State<WelcomeScreen>
   @override
   void initState() {
     super.initState();
+    _connect();
 
     _controller =
         AnimationController(duration: const Duration(seconds: 2), vsync: this);
