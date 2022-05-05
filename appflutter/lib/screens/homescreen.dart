@@ -1,282 +1,189 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:app_flutter/components/joystick.dart';
+import 'package:app_flutter/components/stream.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
-import 'package:ndialog/ndialog.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+class TestScreen extends StatefulWidget {
+  MqttServerClient client;
+  MqttServerClient client2;
+  TestScreen({Key? key, required this.client, required this.client2})
+      : super(key: key);
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<TestScreen> createState() => _TestScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  String statusText = "Status Text";
-  bool isConnected = false;
-  TextEditingController idTextController = TextEditingController();
+class _TestScreenState extends State<TestScreen> {
+  bool flashlight = false;
+  bool sterilize = false;
+  String topic2 = 'esp8266/control';
 
-  final client = MqttServerClient.withPort(
-      "a3ylcu9d7zkfu-ats.iot.ap-southeast-1.amazonaws.com", "flutter", 8883);
-  @override
-  void dispose() {
-    idTextController.dispose();
-    super.dispose();
+  void publishMessageContol(String message) {
+    MqttClientPayloadBuilder? builder = MqttClientPayloadBuilder();
+    builder.addString(message.toString());
+    // Important: AWS IoT Core can only handle QOS of 0 or 1. QOS 2 (exactlyOnce) will fail!
+    widget.client2
+        .publishMessage(topic2, MqttQos.atLeastOnce, builder.payload()!);
+    print(message.toString());
   }
 
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery.of(context).size.width;
-    final bool hasShortWidth = width < 600;
-
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [body(hasShortWidth), footer()],
-        ),
-      ),
+      body: Stack(children: [
+        BodyStream(widget: widget),
+        LayoutBuilder(builder: ((context, constraints) {
+          if (constraints.maxWidth > 600) {
+            return ControlForWindows();
+          } else {
+            return ControlForMobile();
+          }
+        }))
+      ]),
     );
   }
 
-  Widget header() {
-    return Expanded(
-      child: Container(
-        child: const Center(
-          child: Text(
-            'ESP32CAM Viewer\n- AWS IoT -',
-            style: TextStyle(
-                fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-      flex: 3,
-    );
-  }
-
-  Widget body(bool hasShortWidth) {
-    return Expanded(
-      child: Container(
-        child: hasShortWidth
-            ? Column(
-                children: [
-                  Positioned(
-                      left: 20,
-                      bottom: 20,
-                      child: Joystick(
-                        callBack: () {},
-                        size: 300,
-                      )),
-                  bodyMenu(),
-                  Expanded(child: bodySteam()),
-                ],
-              )
-            : Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(0),
-                    width: MediaQuery.of(context).size.width * 0.25,
-                    child: bodyMenu(),
-                  ),
-                  Stack(children: <Widget>[
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.75,
-                      child: bodySteam(),
-                    ),
-                    Positioned(
-                      child: Joystick(
-                        size: 300,
-                        callBack: () {},
-                      ),
-                      left: 20,
-                      bottom: 20,
-                    )
-                  ]),
-                ],
-              ),
-      ),
-      flex: 20,
-    );
-  }
-
-  Widget bodyMenu() {
-    return Container(
-      color: Colors.black26,
-      child: Column(
+  Widget ControlForMobile() {
+    return Center(
+      child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextFormField(
-                enabled: !isConnected,
-                controller: idTextController,
-                decoration: InputDecoration(
-                    border: UnderlineInputBorder(),
-                    labelText: 'MQTT Client Id',
-                    labelStyle: TextStyle(fontSize: 10),
-                    suffixIcon: IconButton(
-                      icon: Icon(Icons.subdirectory_arrow_left),
-                      onPressed: _connect,
-                    ))),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 30,
+            child: Joystick(
+              size: 150,
+              callBack: (double value) {
+                if (value == 1) {
+                  publishMessageContol("1");
+                } else if (value == 2) {
+                  publishMessageContol("2");
+                } else if (value == 3) {
+                  publishMessageContol("3");
+                } else if (value == 4) {
+                  publishMessageContol("4");
+                } else if (value == 0) {
+                  publishMessageContol("0");
+                }
+              },
+            ),
           ),
-          isConnected
-              ? TextButton(onPressed: _disconnect, child: Text('Disconnect'))
-              : Container()
+          Positioned(
+              left: 0,
+              right: 0,
+              bottom: 200,
+              child: Column(
+                children: [
+                  const Text(
+                    "Phun khử khuẩn",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.yellow, fontSize: 18),
+                  ),
+                  Switch.adaptive(
+                    activeColor: Colors.green,
+                    onChanged: (bool value) {
+                      if (value == true) {
+                        publishMessageContol("A");
+                      } else {
+                        publishMessageContol("a");
+                      }
+                      print(value);
+                      setState(() {
+                        sterilize = value;
+                      });
+                    },
+                    value: sterilize,
+                  ),
+                ],
+              )),
+          Positioned(
+              top: 50,
+              left: 0,
+              right: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: const Text(
+                    "XE PHUN KHỬ KHUẨN ĐIỀU KHIỂN TỪ XA",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32.0,
+                    ),
+                  ),
+                ),
+              ))
         ],
       ),
     );
   }
 
-  Widget bodySteam() {
-    return Container(
-      color: Colors.black,
-      child: StreamBuilder(
-        stream: client.updates,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return Center(
-              child: const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            );
-          else {
-            final mqttReceivedMessages =
-                snapshot.data as List<MqttReceivedMessage<MqttMessage?>>?;
-
-            final recMess =
-                mqttReceivedMessages![0].payload as MqttPublishMessage;
-
-            final jpegImage = img.decodeJpg(recMess.payload.message);
-
-            return Container(
-                child: Image.memory(
-              img.encodeJpg(jpegImage!) as Uint8List,
-              gaplessPlayback: true,
-            ));
-          }
-        },
-      ),
-    );
-  }
-
-  Widget footer() {
-    return Expanded(
-      child: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
-        child: Text(
-          statusText,
-          style: TextStyle(
-              fontWeight: FontWeight.normal, color: Colors.amberAccent),
+  Widget ControlForWindows() {
+    return Stack(
+      children: [
+        Positioned(
+          left: 20,
+          bottom: 30,
+          child: Joystick(
+            size: 150,
+            callBack: (double value) {
+              if (value == 1) {
+                publishMessageContol("1");
+              } else if (value == 2) {
+                publishMessageContol("2");
+              } else if (value == 3) {
+                publishMessageContol("3");
+              } else if (value == 4) {
+                publishMessageContol("4");
+              } else if (value == 0) {
+                publishMessageContol("0");
+              }
+            },
+          ),
         ),
-      ),
-      flex: 1,
+        Positioned(
+            right: 20,
+            bottom: 50,
+            child: Column(
+              children: [
+                const Text(
+                  "Phun khử khuân",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.yellow),
+                ),
+                Switch.adaptive(
+                  activeColor: Colors.green,
+                  onChanged: (bool value) {
+                    if (value == true) {
+                      publishMessageContol("A");
+                    } else {
+                      publishMessageContol("a");
+                    }
+                    print(value);
+                    setState(() {
+                      sterilize = value;
+                    });
+                  },
+                  value: sterilize,
+                ),
+              ],
+            )),
+        Positioned(
+            top: 30,
+            left: 0,
+            right: 0,
+            child: const Center(
+              child: Text(
+                "XE PHUN KHỬ KHUẨN ĐIỀU KHIỂN TỪ XA",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20.0,
+                ),
+              ),
+            ))
+      ],
     );
-  }
-
-  _connect() async {
-    if (idTextController.text.trim().isNotEmpty) {
-      ProgressDialog progressDialog = ProgressDialog(context,
-          blur: 0,
-          dialogTransitionType: DialogTransitionType.Shrink,
-          dismissable: false);
-      progressDialog.setLoadingWidget(const CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation(Colors.red),
-      ));
-      progressDialog.setMessage(
-          const Text("Please Wait, Connecting to AWS IoT MQTT Broker"));
-      progressDialog.setTitle(const Text("Connecting"));
-      progressDialog.show();
-
-      isConnected = await mqttConnect(idTextController.text.trim());
-      progressDialog.dismiss();
-    }
-  }
-
-  _disconnect() {
-    client.disconnect();
-  }
-
-  Future<bool> mqttConnect(String uniqueId) async {
-    setStatus("Connecting MQTT Broker");
-
-    // After adding your certificates to the pubspec.yaml, you can use Security Context.
-
-    ByteData rootCA = await rootBundle.load('assets/certs/RootCA.pem');
-    ByteData deviceCert =
-        await rootBundle.load('assets/certs/DeviceCertificate.pem.crt');
-    ByteData privateKey = await rootBundle.load('assets/certs/Private.pem.key');
-
-    final context = SecurityContext.defaultContext;
-    context.setClientAuthoritiesBytes(rootCA.buffer.asUint8List());
-    context.useCertificateChainBytes(deviceCert.buffer.asUint8List());
-    context.usePrivateKeyBytes(privateKey.buffer.asUint8List());
-
-    client.securityContext = context;
-
-    client.logging(on: false);
-    client.keepAlivePeriod = 20;
-    client.port = 8883;
-    client.secure = true;
-    client.onConnected = onConnected;
-    client.onDisconnected = onDisconnected;
-    client.pongCallback = pong;
-
-    final MqttConnectMessage connMess =
-        MqttConnectMessage().withClientIdentifier('flutter').startClean();
-    client.connectionMessage = connMess;
-
-    try {
-      print('MQTT client connecting to AWS IoT....');
-      await client.connect();
-    } on Exception catch (e) {
-      print('MQTT client exception - $e');
-      client.disconnect();
-      exit(-1);
-    }
-    if (client.connectionStatus!.state == MqttConnectionState.connected) {
-      print("Connected to AWS Successfully!");
-    } else {
-      return false;
-    }
-
-    const topic2 = 'esp32/control';
-    final builder = MqttClientPayloadBuilder();
-    builder.addString('Hello World');
-    // Important: AWS IoT Core can only handle QOS of 0 or 1. QOS 2 (exactlyOnce) will fail!
-    client.publishMessage(topic2, MqttQos.atLeastOnce, builder.payload()!);
-    const topic = 'esp32/stream';
-    client.subscribe(topic, MqttQos.atMostOnce);
-    return true;
-  }
-
-  void setStatus(String content) {
-    setState(() {
-      statusText = content;
-    });
-  }
-
-  Uint8List convertStringToUint8List(String str) {
-    final List<int> codeUnits = str.codeUnits;
-    final Uint8List unit8List = Uint8List.fromList(codeUnits);
-
-    return unit8List;
-  }
-
-  void onConnected() {
-    setStatus("Client connection was successful");
-  }
-
-  void onDisconnected() {
-    setStatus("Client Disconnected");
-    isConnected = false;
-  }
-
-  void pong() {
-    print('Ping response client callback invoked');
   }
 }
